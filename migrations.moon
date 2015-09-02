@@ -5,7 +5,7 @@ import add_column, create_index, drop_index, drop_column, create_table from sche
 
 {
   :serial, :boolean, :varchar, :integer, :text, :foreign_key, :double, :time,
-  :numeric, :enum
+  :numeric, :enum, :date
 } = schema.types
 
 import run_migrations from require "lapis.db.migrations"
@@ -13,5 +13,15 @@ import run_migrations from require "lapis.db.migrations"
 {
   =>
     run_migrations require "moonscrape.migrations"
+
+  =>
+    create_table "daily_views", {
+      {"object_type", enum}
+      {"object_id", integer}
+      {"date", date}
+      {"count", integer}
+
+      "PRIMARY KEY (object_type, object_id, date)"
+    }
 }
 
