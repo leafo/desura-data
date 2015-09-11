@@ -1,4 +1,6 @@
 
+db = require "lapis.db"
+
 import Pages, QueuedUrls from require "moonscrape.models"
 import query_all from require "web_sanitize.query"
 
@@ -54,12 +56,51 @@ games = ->
   }
 
 
+  skipped = {}
+  failed = {}
+
   for group in pager\each_page!
     for url in *group
+      print url.url
       page = url\get_page!
+      continue unless page
 
-      game_id = page.body\match "images/games/%d+/%d+/(%d+)"
-      title = query_all url.page.body, ".title"
+      local game_id
+      meta = query_all url.page.body, "meta"
+      for m in *meta
+        if c = m.attr.content
+          game_id = c\match "images/games/%d+/%d+/(%d+)"
+          break if game_id
 
+      title = unpack query_all url.page.body, ".title h2 a"
+      title = title and title\inner_html!
+
+      unless title and game_id
+        print "Failed to get title/game_id #{title} #{game_id}"
+        table.insert skipped, url.url
+        continue
+
+      inserted, err = pcall ->
+        Games\create {
+          queued_url_id: url.id
+          url: url.url
+          remote_id: game_id
+          title: title
+        }
+
+      unless inserted
+        table.insert failed, {url.url, err}
+
+  print!
+  print "Skipped:"
+  for url in *skipped
+    print "  #{url}"
+
+  print!
+  print "Failed:"
+  for {url, err} in *failed
+    print "  #{url} - #{err}"
 
 games!
+
+

@@ -27,11 +27,14 @@ import run_migrations from require "lapis.db.migrations"
   =>
     create_table "games", {
       {"id", serial}
+      {"queued_url_id", foreign_key}
 
       {"remote_id", varchar}
       {"title", varchar}
+      {"url", varchar}
 
       "PRIMARY KEY (id)"
     }
+    create_index "games", "remote_id", unique: true
 }
 
