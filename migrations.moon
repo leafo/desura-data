@@ -23,5 +23,15 @@ import run_migrations from require "lapis.db.migrations"
 
       "PRIMARY KEY (object_type, object_id, date)"
     }
+
+  =>
+    create_table "games", {
+      {"id", serial}
+
+      {"remote_id", varchar}
+      {"title", varchar}
+
+      "PRIMARY KEY (id)"
+    }
 }
 
