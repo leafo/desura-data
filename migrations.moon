@@ -32,6 +32,7 @@ import run_migrations from require "lapis.db.migrations"
       {"remote_id", varchar}
       {"title", varchar}
       {"url", varchar}
+      {"slug", varchar}
 
       "PRIMARY KEY (id)"
     }

@@ -23,6 +23,11 @@ views = ->
       game_id = tonumber url.url\match "games/(%d+)"
       assert game_id, "missing game id"
 
+      game = Games\find remote_id: tostring game_id
+      unless game
+        print "Failed to find game for remote id: #{game_id}"
+        continue
+
       titles = query_all url.page.body, "data_set title"
       titles = [t\inner_html! for t in *titles]
 
@@ -38,9 +43,9 @@ views = ->
         date, views = line\match "(%d+-%d+-%d+);(%d+)"
         continue unless date
         views = tonumber views
-        {1, game_id, date, views}
+        {1, game.id, date, views}
 
-      print "Inserting game #{game_id}"
+      print "Inserting views for: #{game.slug}"
       bulk_insert DailyViews, {"object_type", "object_id", "date", "count"}, tuples
       -- os.exit!
 
@@ -61,6 +66,8 @@ games = ->
 
   for group in pager\each_page!
     for url in *group
+      continue if url.url\match "%s"
+
       print url.url
       page = url\get_page!
       continue unless page
@@ -84,6 +91,7 @@ games = ->
         Games\create {
           queued_url_id: url.id
           url: url.url
+          slug: url.url\match "([^/]+)$"
           remote_id: game_id
           title: title
         }
@@ -101,6 +109,14 @@ games = ->
   for {url, err} in *failed
     print "  #{url} - #{err}"
 
-games!
 
+fn = ({
+  :games
+  :views
+})[...]
+
+unless fn
+  error "Failed to provide action"
+
+fn!
 
